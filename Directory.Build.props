@@ -8,13 +8,6 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
 
-    <!-- Package version — overridden by CI via -p:Version=$(tag) on tagged releases -->
-    <Version>1.0.0</Version>
-    <Authors>Achi054</Authors>
-    <RepositoryUrl>https://github.com/Achi054/Library.Jewelix.Infrastructure</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-
     <!-- Generate XML docs into the build output dir so NuGet pack can bundle them. Must
          be in .props (not .targets) so the SDK resolves DocumentationFile before CoreCompile. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -23,6 +16,10 @@
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--
+      NU5104/5105 — pre-release framework references.
+      1591 — missing XML doc on non-public members.
+    -->
     <NoWarn>1701;1702;1591;NU5104;NU5105</NoWarn>
   </PropertyGroup>
 </Project>

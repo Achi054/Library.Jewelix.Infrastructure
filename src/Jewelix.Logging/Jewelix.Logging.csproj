@@ -1,11 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- All NuGet identity, versioning, and packaging metadata lives in this file. -->
+  <Import Project="Jewelix.Logging.Package.props" />
+
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Jewelix.Logging</RootNamespace>
     <AssemblyName>Jewelix.Logging</AssemblyName>
     <IsPackable>true</IsPackable>
-    <Description>Cross-cutting logging library for Jewelix services. Bundles Serilog (Console + rolling File sinks) with request/response middleware, correlation IDs, and a Microsoft.Extensions.Logging adapter.</Description>
   </PropertyGroup>
 
   <!-- Use the shared ASP.NET Core framework reference instead of the legacy
