@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Jewelix.Logging.Tests</name>
+    </assembly>
+    <members>
+        <member name="T:Jewelix.Logging.Tests.DependencyInjectionTests">
+            <summary>
+            Tests for <see cref="M:Jewelix.Logging.LoggerExtensions.AddJewelixLogger(Microsoft.Extensions.DependencyInjection.IServiceCollection)"/>: DI registration of
+            <see cref="T:Jewelix.Logging.SerilogLogger`1"/>, replacement of the default <c>ILogger&lt;&gt;</c>
+            registration, and null-argument guard behaviour.
+            </summary>
+        </member>
+        <member name="T:Jewelix.Logging.Tests.Helper.InMemorySink">
+            <summary>
+            Captures emitted Serilog events in memory so tests can assert against them.
+            Thread-safe so middleware tests on TestServer don't race with the test thread.
+            </summary>
+        </member>
+        <member name="P:Jewelix.Logging.Tests.Helper.InMemorySink.Events">
+            <summary>
+            Returns a snapshot of all log events captured since this sink was created.
+            </summary>
+        </member>
+        <member name="M:Jewelix.Logging.Tests.Helper.InMemorySink.Emit(Serilog.Events.LogEvent)">
+            <summary>
+            Appends <paramref name="logEvent"/> to the in-memory event list.
+            </summary>
+        </member>
+        <member name="T:Jewelix.Logging.Tests.Helper.SerilogTestCollection">
+            <summary>
+            xUnit collection definition that enforces sequential execution for all tests in the
+            "Serilog" collection. Required because those tests mutate the static
+            <c>Log.Logger</c> — parallel execution would race on the global sink.
+            </summary>
+        </member>
+        <member name="T:Jewelix.Logging.Tests.LoggerMiddlewareTests">
+            <summary>
+            Tests for <see cref="M:Jewelix.Logging.LoggerMiddleware.Invoke(Microsoft.AspNetCore.Http.HttpContext)"/>: correlation ID generation and
+            propagation, HTTP summary event emission, request/response body capture at Debug
+            level, and sensitive field masking. Uses an in-process <c>TestServer</c> to drive
+            real HTTP requests through the middleware pipeline.
+            </summary>
+        </member>
+        <member name="T:Jewelix.Logging.Tests.SanitizeTests">
+            <summary>
+            Tests for <see cref="M:Jewelix.Logging.LoggerMiddleware.Sanitize(System.String,System.Int32)"/>: empty-input handling, masking of
+            known sensitive JSON fields (password, token, secret, creditCard, apiKey),
+            case-insensitive matching, preservation of non-sensitive fields, and truncation of
+            payloads that exceed the maximum logging length.
+            </summary>
+        </member>
+        <member name="T:Jewelix.Logging.Tests.SerilogLoggerTests">
+            <summary>
+            Tests for <see cref="T:Jewelix.Logging.SerilogLogger`1"/>: log-level mapping from
+            <c>Microsoft.Extensions.Logging</c> to Serilog, exception attachment,
+            <c>SourceContext</c> stamping, and <c>None</c>-level suppression.
+            </summary>
+        </member>
+        <member name="T:Jewelix.Logging.Tests.UseJewelixLoggerTests">
+            <summary>
+            Tests for <see cref="M:Jewelix.Logging.LoggerExtensions.UseJewelixLogger(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.Extensions.Configuration.IConfiguration)"/>: Serilog logger
+            configuration from an <c>appsettings.json</c>-style in-memory configuration,
+            middleware pipeline registration, and null-argument guard behaviour.
+            </summary>
+        </member>
+    </members>
+</doc>

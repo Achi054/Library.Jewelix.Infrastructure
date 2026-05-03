@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Jewelix.Logging/Jewelix.Logging.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Jewelix.Logging.Tests/Jewelix.Logging.Tests.csproj" />
+  </Folder>
+</Solution>

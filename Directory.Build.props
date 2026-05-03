@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <!-- Base namespace -->
+    <BaseNamespace>Jewelix.Infrastructure</BaseNamespace>
+
+    <!-- Build properties -->
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    
+    <!-- Code analysis settings -->
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>1701;1702;1591;NU5104;NU5105</NoWarn>
+  </PropertyGroup>
+</Project>

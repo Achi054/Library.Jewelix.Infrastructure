@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Jewelix.Logging</RootNamespace>
+    <AssemblyName>Jewelix.Logging</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <Description>Cross-cutting logging library for Jewelix services. Bundles Serilog (Console + rolling File sinks) with request/response middleware, correlation IDs, and a Microsoft.Extensions.Logging adapter.</Description>
+  </PropertyGroup>
+
+  <!-- Use the shared ASP.NET Core framework reference instead of the legacy
+       Microsoft.AspNetCore.Http.Abstractions NuGet package (which targets .NET Framework). -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+
+</Project>
