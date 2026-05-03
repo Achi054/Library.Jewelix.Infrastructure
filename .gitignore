@@ -6,6 +6,7 @@
 *.user
 .vs
 !.gitignore
+.claude/
 
 # Build results
 [Dd]ebug/
@@ -21,6 +22,7 @@ x64/
 
 # Click-Once directory
 publish/
+artifacts/
 
 # Publish Web Output
 *.Publish.xml

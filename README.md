@@ -1,5 +1,9 @@
 # 🏗️ Library.Jewelix.Infrastructure
 
+[![CI / CD](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd.yml/badge.svg)](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd.yml)
+[![Latest Release](https://img.shields.io/github/v/release/Achi054/Library.Jewelix.Infrastructure?label=Jewelix.Logging&color=blue&logo=nuget)](https://github.com/Achi054/Library.Jewelix.Infrastructure/pkgs/nuget/Jewelix.Logging)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 > Cross-cutting infrastructure library for the **Jewelix** ecosystem. Currently ships the `Jewelix.Logging` package — a production-ready Serilog integration with request/response middleware, correlation IDs, and a Microsoft.Extensions.Logging adapter.
 
 ---
@@ -113,10 +117,60 @@ When the configured minimum level is `Debug` or lower:
 
 ---
 
+## 🚦 CI / CD
+
+The pipeline lives in [`.github/workflows/cicd.yml`](.github/workflows/cicd.yml) and runs two jobs:
+
+| Job | Trigger | Steps |
+|---|---|---|
+| **Build & Test** | Every push to `main` and every PR | restore → build → test → upload TRX results |
+| **Pack & Publish** | Push of a `v*.*.*` tag (e.g. `v1.2.3`) | restore → build → pack → push to GitHub Packages |
+
+### 🏷️ Releasing a new version
+
+1. Update `<Version>` in [`Directory.Build.props`](Directory.Build.props).
+2. Commit and push to `main`.
+3. Create and push a matching tag:
+   ```bash
+   git tag v1.2.3
+   git push origin v1.2.3
+   ```
+4. The **Pack & Publish** job picks up the tag, extracts `1.2.3`, rebuilds, packs, and pushes `Jewelix.Logging 1.2.3` to [GitHub Packages](https://github.com/Achi054/Library.Jewelix.Infrastructure/pkgs/nuget/Jewelix.Logging).
+
+### 📥 Consuming from GitHub Packages
+
+Add the feed to your `nuget.config`:
+
+```xml
+<configuration>
+  <packageSources>
+    <add key="github-jewelix"
+         value="https://nuget.pkg.github.com/Achi054/index.json" />
+  </packageSources>
+  <packageSourceCredentials>
+    <github-jewelix>
+      <add key="Username" value="YOUR_GITHUB_USERNAME" />
+      <add key="ClearTextPassword" value="YOUR_GITHUB_PAT" />
+    </github-jewelix>
+  </packageSourceCredentials>
+</configuration>
+```
+
+Then reference the package normally:
+
+```xml
+<PackageReference Include="Jewelix.Logging" Version="1.0.0" />
+```
+
+---
+
 ## 🗂️ File Structure
 
 ```
 Library.Jewelix.Infrastructure/
+├── .github/
+│   └── workflows/
+│       └── cicd.yml                    # GitHub Actions CI/CD pipeline
 ├── src/
 │   └── Jewelix.Logging/
 │       ├── SerilogLogger.cs          # ILogger<T> → Serilog adapter

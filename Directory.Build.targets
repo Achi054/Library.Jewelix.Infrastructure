@@ -1,8 +1,4 @@
 <Project>
-    <PropertyGroup>
-        <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
-    </PropertyGroup>
-
     <ItemGroup>
         <InternalsVisibleTo Include="$(AssemblyName).Tests" />
     </ItemGroup>

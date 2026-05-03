@@ -3,7 +3,9 @@
     "allow": [
       "Bash(awk '{print \"  \" $0}')",
       "Bash(dotnet build *)",
-      "Bash(dotnet test *)"
+      "Bash(dotnet test *)",
+      "Bash(dotnet pack *)",
+      "Bash(unzip -l artifacts/Jewelix.Logging.1.0.0.nupkg)"
     ]
   }
 }

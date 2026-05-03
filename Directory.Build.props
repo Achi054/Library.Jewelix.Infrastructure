@@ -7,7 +7,18 @@
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    
+
+    <!-- Package version — overridden by CI via -p:Version=$(tag) on tagged releases -->
+    <Version>1.0.0</Version>
+    <Authors>Achi054</Authors>
+    <RepositoryUrl>https://github.com/Achi054/Library.Jewelix.Infrastructure</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <!-- Generate XML docs into the build output dir so NuGet pack can bundle them. Must
+         be in .props (not .targets) so the SDK resolves DocumentationFile before CoreCompile. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
     <!-- Code analysis settings -->
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
