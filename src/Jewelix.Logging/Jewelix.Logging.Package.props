@@ -1,0 +1,74 @@
+<Project>
+
+  <!--
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  Jewelix.Logging — NuGet package configuration                          │
+    │                                                                         │
+    │  All packaging metadata lives here so the version and identity of this  │
+    │  package can be managed independently of the shared Directory.Build.props│
+    │  that applies to every project in the solution.                         │
+    │                                                                         │
+    │  To release a new version:                                              │
+    │    1. Bump <Version> below.                                             │
+    │    2. Commit and push to main.                                          │
+    │    3. Push a matching tag:  git tag v<Version> && git push origin v...  │
+    │    The CI/CD pipeline (.github/workflows/cicd.yml) picks up the tag,   │
+    │    rebuilds with -p:Version=<tag>, packs, and publishes automatically.  │
+    └─────────────────────────────────────────────────────────────────────────┘
+  -->
+
+  <PropertyGroup>
+
+    <!-- ── Identity ─────────────────────────────────────────────────────── -->
+    <PackageId>Jewelix.Logging</PackageId>
+    <Title>Jewelix Logging</Title>
+    <Description>
+      Cross-cutting logging library for Jewelix services. Bundles Serilog
+      (Console + rolling File sinks) behind the Microsoft.Extensions.Logging
+      abstraction, adds HTTP request/response middleware with correlation-ID
+      propagation, elapsed-time tracking, and sensitive-field masking.
+    </Description>
+    <Authors>Achi054</Authors>
+    <Copyright>Copyright © 2024 Achi054</Copyright>
+
+    <!-- ── Version ──────────────────────────────────────────────────────── -->
+    <!--   Overridden by CI via  -p:Version=$(git-tag)  on tagged releases.  -->
+    <Version>1.0.0</Version>
+
+    <!-- ── Discovery ────────────────────────────────────────────────────── -->
+    <PackageTags>serilog;logging;aspnetcore;middleware;correlation-id;request-response;structured-logging;jewelix</PackageTags>
+
+    <!-- ── Licensing &amp; source ────────────────────────────────────────── -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/Achi054/Library.Jewelix.Infrastructure</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Achi054/Library.Jewelix.Infrastructure</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- ── Presentation ─────────────────────────────────────────────────── -->
+    <!--   NuGet PackageIcon must be PNG or JPEG; Jewelix-logo.png is used   -->
+    <!--   for the nuget.org / GitHub Packages display icon.                 -->
+    <!--   Jewelix-logo.png is bundled separately so consumers can use it    -->
+    <!--   for Windows shell integration (app icons, shortcuts, etc.).       -->
+    <PackageIcon>Jewelix-logo.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- ── Symbols ──────────────────────────────────────────────────────── -->
+    <!--   Ships a companion .snupkg so consumers get step-through debugging. -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+  </PropertyGroup>
+
+  <!-- ── Package contents ───────────────────────────────────────────────── -->
+  <ItemGroup>
+    <!--   PNG display icon (required by NuGet for PackageIcon).             -->
+    <None Include="$(MSBuildThisFileDirectory)Jewelix-logo.png"
+          Pack="true" PackagePath="" />
+          
+    <!--   Embed the repo README so nuget.org / GitHub Packages show it.     -->
+    <None Include="$(MSBuildThisFileDirectory)..\..\README.md"
+          Pack="true" PackagePath="" />
+  </ItemGroup>
+
+</Project>

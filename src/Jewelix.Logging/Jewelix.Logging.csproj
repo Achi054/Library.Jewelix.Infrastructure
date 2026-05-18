@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- All NuGet identity, versioning, and packaging metadata lives in Jewelix.Logging.Package.props. -->
+  <Import Project="Jewelix.Logging.Package.props" />
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Jewelix.Logging</RootNamespace>
+    <AssemblyName>Jewelix.Logging</AssemblyName>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="C:\Users\sujit\source\git\Jewelix\Library.Jewelix.Infrastructure\src\Jewelix.Logging\..\..\README.md" />
+  </ItemGroup>
+
+  <!-- Use the shared ASP.NET Core framework reference instead of the legacy
+       Microsoft.AspNetCore.Http.Abstractions NuGet package (which targets .NET Framework). -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,25 @@
+<Project>
+  <PropertyGroup>
+    <!-- Base namespace -->
+    <BaseNamespace>Jewelix.Infrastructure</BaseNamespace>
+
+    <!-- Build properties -->
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+
+    <!-- Generate XML docs into the build output dir so NuGet pack can bundle them. Must
+         be in .props (not .targets) so the SDK resolves DocumentationFile before CoreCompile. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Code analysis settings -->
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--
+      NU5104/5105 — pre-release framework references.
+      1591 — missing XML doc on non-public members.
+    -->
+    <NoWarn>1701;1702;1591;NU5104;NU5105</NoWarn>
+  </PropertyGroup>
+</Project>

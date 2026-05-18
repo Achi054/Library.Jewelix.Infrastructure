@@ -1,0 +1,127 @@
+name: CI / CD
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+  checks: write    # required by dorny/test-reporter to annotate PRs
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
+  NUGET_FEED: https://nuget.pkg.github.com/Achi054/index.json
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 1 – Build & Test
+  # Runs on every push to main and on every pull request.
+  # ──────────────────────────────────────────────────────────────────────────
+  ci:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: >
+          dotnet test
+          --no-build
+          --configuration Release
+          --logger "trx;LogFileName=results.trx"
+          --results-directory ./test-results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./test-results/*.trx
+          retention-days: 7
+
+      - name: Report test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: xUnit Tests
+          path: ./test-results/*.trx
+          reporter: dotnet-trx
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 2 – Pack & Publish
+  # Runs only when a 'v*.*.*' tag is pushed (e.g. v1.2.3).
+  # Extracts the semver from the tag, rebuilds with that version, packs, and
+  # pushes the .nupkg to the GitHub Packages NuGet feed.
+  # ──────────────────────────────────────────────────────────────────────────
+  publish:
+    name: Pack & Publish
+    needs: ci
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build (Release — versioned)
+        run: >
+          dotnet build
+          --no-restore
+          --configuration Release
+          -p:Version=${{ steps.version.outputs.VERSION }}
+
+      - name: Pack
+        run: >
+          dotnet pack src/Jewelix.Logging/Jewelix.Logging.csproj
+          --no-build
+          --configuration Release
+          -p:Version=${{ steps.version.outputs.VERSION }}
+          --output ./artifacts
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg-${{ steps.version.outputs.VERSION }}
+          path: ./artifacts/*.nupkg
+          retention-days: 30
+
+      - name: Publish packages to GitHub Packages
+        run: |
+          dotnet nuget push ./artifacts/*.nupkg \
+            --source ${{ env.NUGET_FEED }} \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
+          dotnet nuget push ./artifacts/*.snupkg \
+            --source ${{ env.NUGET_FEED }} \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
