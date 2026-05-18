@@ -14,13 +14,23 @@ namespace Jewelix.Logging;
 public static class LoggerExtensions
 {
 	/// <summary>
-	/// The standard Serilog output template used by <see cref="UseJewelixLogger"/>.
+	/// Output template for HTTP summary events emitted by <see cref="LoggerMiddleware"/>.
 	/// Includes timestamp, level, request/correlation IDs, elapsed milliseconds, and
-	/// the structured HTTP message. Reference this constant when configuring additional
-	/// sinks (e.g. file) in <c>appsettings.json</c> to keep all sinks consistent.
+	/// the structured HTTP message. <c>{ElapsedMs}</c> is populated only for the summary
+	/// event; use <see cref="DebugOutputTemplate"/> for sinks that also capture body
+	/// events to avoid rendering <c>[]ms</c> on those entries.
 	/// </summary>
 	public const string OutputTemplate =
 		"[{Timestamp:yyyy-MM-dd HH:mm:ss}] [{Level:u3}] [{RequestId}] [{CorrelationId}] [{ElapsedMs}ms] HTTP {Message:lj}{NewLine}{Exception}";
+
+	/// <summary>
+	/// Output template for Debug-level events (request/response body captures) that do
+	/// not have <c>ElapsedMs</c> on the <c>LogContext</c>. Use this template when
+	/// configuring a sink that receives all log levels so that body-capture lines do not
+	/// render as <c>[]ms</c>.
+	/// </summary>
+	public const string DebugOutputTemplate =
+		"[{Timestamp:yyyy-MM-dd HH:mm:ss}] [{Level:u3}] [{RequestId}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}";
 
 	/// <summary>
 	/// Registers the Serilog-backed <see cref="ILogger{T}"/> adapter so the rest

@@ -32,11 +32,12 @@ public class UseJewelixLoggerTests : IDisposable
     [Fact]
     public async Task UseJewelixLogger_WhenSerilogSectionPresent_ReadsSerilogConfiguration()
     {
-        // Provide a Serilog section in-memory the same way appsettings.json would.
+        // Provide only the minimum-level section. UseJewelixLogger always wires a
+        // Console sink in code; adding WriteTo:Console here too would produce a
+        // second Console sink during tests.
         var inMemorySettings = new Dictionary<string, string?>
         {
             ["Serilog:MinimumLevel:Default"] = "Information",
-            ["Serilog:WriteTo:0:Name"] = "Console",
         };
 
         using var host = new HostBuilder()

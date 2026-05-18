@@ -33,7 +33,8 @@ public sealed partial class LoggerMiddleware
 	/// </summary>
 	public LoggerMiddleware(RequestDelegate next)
 	{
-		_next = next ?? throw new ArgumentNullException(nameof(next));
+		ArgumentNullException.ThrowIfNull(next);
+		_next = next;
 	}
 
 	/// <summary>

@@ -10,7 +10,8 @@ namespace Jewelix.Logging.Tests;
 /// <summary>
 /// Tests for <see cref="SerilogLogger{T}"/>: log-level mapping from
 /// <c>Microsoft.Extensions.Logging</c> to Serilog, exception attachment,
-/// <c>SourceContext</c> stamping, and <c>None</c>-level suppression.
+/// <c>SourceContext</c> stamping, <c>None</c>-level suppression, and
+/// scope enrichment via <c>BeginScope</c>.
 /// </summary>
 [Collection(SerilogTestCollection.Name)]
 public class SerilogLoggerTests : IDisposable
@@ -23,6 +24,7 @@ public class SerilogLoggerTests : IDisposable
         _previous = Log.Logger;
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
+            .Enrich.FromLogContext()
             .WriteTo.Sink(_sink)
             .CreateLogger();
     }
@@ -86,5 +88,20 @@ public class SerilogLoggerTests : IDisposable
         var ev = _sink.Events.ShouldHaveSingleItem();
         ev.Properties.ShouldContainKey("SourceContext");
         ev.Properties["SourceContext"].ToString().ShouldContain(nameof(SerilogLoggerTests));
+    }
+
+    [Fact]
+    public void BeginScope_WithState_PushesScopePropertyOntoLogContext()
+    {
+        var logger = new SerilogLogger<SerilogLoggerTests>();
+
+        using (logger.BeginScope("my-scope"))
+        {
+            logger.LogInformation("inside scope");
+        }
+
+        var ev = _sink.Events.ShouldHaveSingleItem();
+        ev.Properties.ShouldContainKey("Scope");
+        ev.Properties["Scope"].ToString().ShouldContain("my-scope");
     }
 }

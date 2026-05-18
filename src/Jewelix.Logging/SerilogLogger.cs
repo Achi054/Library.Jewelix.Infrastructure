@@ -23,6 +23,13 @@ public sealed class SerilogLogger<T> : ILogger<T>
     /// <see cref="LogContext"/> as a <c>Scope</c> property. Dispose the returned
     /// handle to pop the scope.
     /// </summary>
+    /// <remarks>
+    /// <b>Known limitation:</b> each nested <c>BeginScope</c> call overwrites the
+    /// <c>Scope</c> property rather than accumulating outer scopes into a list.
+    /// This covers simple single-scope usage (operation IDs, user IDs) but does not
+    /// faithfully replicate the full MEL scope-nesting contract. For richer nesting
+    /// consider using <c>Serilog.Extensions.Logging</c> directly.
+    /// </remarks>
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull
         => LogContext.PushProperty("Scope", state);
 

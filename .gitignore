@@ -28,3 +28,10 @@ artifacts/
 *.Publish.xml
 *.pubxml
 *.azurePubxml
+
+# Generated XML documentation files (produced into bin/ via GenerateDocumentationFile)
+**/Properties/*.xml
+
+# Test result files
+test-results/
+

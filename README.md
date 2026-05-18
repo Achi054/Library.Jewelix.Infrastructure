@@ -59,6 +59,8 @@ app.UseJewelixLogger(app.Configuration);
 ```
 
 > 💡 **Console sink** is automatically configured by `UseJewelixLogger` with the standard output template — no additional `WriteTo.Console` entry is needed in `appsettings.json`. For additional sinks (File, Seq, etc.) add them under `Serilog:WriteTo` and use `LoggerExtensions.OutputTemplate` as the `outputTemplate` value to keep all sinks consistent.
+>
+> 🐞 **Debug body-capture sinks** should use `LoggerExtensions.DebugOutputTemplate` instead — it omits the `{ElapsedMs}` token, which is not pushed onto `LogContext` for individual body-capture events (only for the HTTP summary event).
 
 ---
 
@@ -85,7 +87,7 @@ Every HTTP request produces a structured log event in this format:
 | `{ElapsedMs}` | Total request processing time in milliseconds |
 | `{Message:lj}` | Structured log message in literal JSON format |
 
-> ⚠️ `{ElapsedMs}` is pushed onto `LogContext` only for the HTTP summary event. Other log events (e.g. Debug body captures) will render an empty value for that token — this is by design.
+> ⚠️ `{ElapsedMs}` is pushed onto `LogContext` only for the HTTP summary event. Debug body-capture events will render an empty value for that token when `OutputTemplate` is used — use `DebugOutputTemplate` for sinks that receive all log levels to avoid rendering `[]ms` on body lines.
 
 ---
 
@@ -123,12 +125,12 @@ The pipeline lives in [`.github/workflows/cicd.yml`](.github/workflows/cicd.yml)
 
 | Job | Trigger | Steps |
 |---|---|---|
-| **Build & Test** | Every push to `main` and every PR | restore → build → test → upload TRX results |
-| **Pack & Publish** | Push of a `v*.*.*` tag (e.g. `v1.2.3`) | restore → build → pack → push to GitHub Packages |
+| **Build & Test** | Every push to `main` and every PR | restore → build → test → upload TRX results → annotate PR with test report |
+| **Pack & Publish** | Push of a `v*.*.*` tag (e.g. `v1.2.3`) | restore → build → pack → push `.nupkg` + `.snupkg` to GitHub Packages |
 
 ### 🏷️ Releasing a new version
 
-1. Update `<Version>` in [`Directory.Build.props`](Directory.Build.props).
+1. Update `<Version>` in [`src/Jewelix.Logging/Jewelix.Logging.Package.props`](src/Jewelix.Logging/Jewelix.Logging.Package.props).
 2. Commit and push to `main`.
 3. Create and push a matching tag:
    ```bash
@@ -170,18 +172,22 @@ Then reference the package normally:
 Library.Jewelix.Infrastructure/
 ├── .github/
 │   └── workflows/
-│       └── cicd.yml                    # GitHub Actions CI/CD pipeline
+│       └── cicd.yml                        # GitHub Actions CI/CD pipeline
 ├── src/
 │   └── Jewelix.Logging/
-│       ├── SerilogLogger.cs          # ILogger<T> → Serilog adapter
-│       ├── LoggerExtension.cs        # AddJewelixLogger / UseJewelixLogger
-│       ├── LoggerMiddleware.cs       # HTTP middleware + Sanitize helper
+│       ├── Jewelix.Logging.csproj          # SDK project (imports Package.props)
+│       ├── Jewelix.Logging.Package.props   # NuGet identity, versioning & packaging metadata
+│       ├── Jewelix-logo.png                # NuGet package icon (PNG, 64×64)
+│       ├── Jewelix-logo.ico                # Windows shell icon (bundled as content)
+│       ├── SerilogLogger.cs                # ILogger<T> → Serilog adapter
+│       ├── LoggerExtension.cs              # AddJewelixLogger / UseJewelixLogger
+│       ├── LoggerMiddleware.cs             # HTTP middleware + Sanitize helper
 │       └── GlobalUsings.cs
 ├── test/
 │   └── Jewelix.Logging.Tests/
 │       ├── Helper/
-│       │   ├── InMemorySink.cs       # Thread-safe Serilog sink for tests
-│       │   └── SerilogTestCollection.cs  # xUnit collection (sequential execution)
+│       │   ├── InMemorySink.cs             # Thread-safe Serilog sink for tests
+│       │   └── SerilogTestCollection.cs    # xUnit collection (sequential execution)
 │       ├── SerilogLoggerTests.cs
 │       ├── DependencyInjectionTests.cs
 │       ├── LoggerMiddlewareTests.cs

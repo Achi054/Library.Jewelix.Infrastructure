@@ -36,10 +36,7 @@
     <Version>1.0.0</Version>
 
     <!-- ── Discovery ────────────────────────────────────────────────────── -->
-    <PackageTags>
-      serilog;logging;aspnetcore;middleware;correlation-id;
-      request-response;structured-logging;jewelix
-    </PackageTags>
+    <PackageTags>serilog;logging;aspnetcore;middleware;correlation-id;request-response;structured-logging;jewelix</PackageTags>
 
     <!-- ── Licensing &amp; source ────────────────────────────────────────── -->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -51,9 +48,9 @@
     <!-- ── Presentation ─────────────────────────────────────────────────── -->
     <!--   NuGet PackageIcon must be PNG or JPEG; Jewelix-logo.png is used   -->
     <!--   for the nuget.org / GitHub Packages display icon.                 -->
-    <!--   Jewelix-logo.ico is bundled separately so consumers can use it    -->
+    <!--   Jewelix-logo.png is bundled separately so consumers can use it    -->
     <!--   for Windows shell integration (app icons, shortcuts, etc.).       -->
-    <PackageIcon>..\src\Jewelix.Logging\Jewelix-logo.png</PackageIcon>
+    <PackageIcon>Jewelix-logo.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <!-- ── Symbols ──────────────────────────────────────────────────────── -->

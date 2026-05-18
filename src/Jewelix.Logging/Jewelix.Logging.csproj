@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- All NuGet identity, versioning, and packaging metadata lives in this file. -->
+  <!-- All NuGet identity, versioning, and packaging metadata lives in Jewelix.Logging.Package.props. -->
   <Import Project="Jewelix.Logging.Package.props" />
 
   <PropertyGroup>

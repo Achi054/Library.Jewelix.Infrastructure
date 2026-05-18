@@ -10,6 +10,7 @@ on:
 permissions:
   contents: read
   packages: write
+  checks: write    # required by dorny/test-reporter to annotate PRs
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
@@ -56,6 +57,14 @@ jobs:
           path: ./test-results/*.trx
           retention-days: 7
 
+      - name: Report test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: xUnit Tests
+          path: ./test-results/*.trx
+          reporter: dotnet-trx
+
   # ──────────────────────────────────────────────────────────────────────────
   # Job 2 – Pack & Publish
   # Runs only when a 'v*.*.*' tag is pushed (e.g. v1.2.3).
@@ -99,16 +108,20 @@ jobs:
           -p:Version=${{ steps.version.outputs.VERSION }}
           --output ./artifacts
 
-      - name: Upload package artifact
+      - name: Upload package artifacts
         uses: actions/upload-artifact@v4
         with:
           name: nupkg-${{ steps.version.outputs.VERSION }}
           path: ./artifacts/*.nupkg
           retention-days: 30
 
-      - name: Publish to GitHub Packages
-        run: >
-          dotnet nuget push ./artifacts/*.nupkg
-          --source ${{ env.NUGET_FEED }}
-          --api-key ${{ secrets.GITHUB_TOKEN }}
-          --skip-duplicate
+      - name: Publish packages to GitHub Packages
+        run: |
+          dotnet nuget push ./artifacts/*.nupkg \
+            --source ${{ env.NUGET_FEED }} \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
+          dotnet nuget push ./artifacts/*.snupkg \
+            --source ${{ env.NUGET_FEED }} \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
