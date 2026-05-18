@@ -10,6 +10,10 @@
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="C:\Users\sujit\source\git\Jewelix\Library.Jewelix.Infrastructure\src\Jewelix.Logging\..\..\README.md" />
+  </ItemGroup>
+
   <!-- Use the shared ASP.NET Core framework reference instead of the legacy
        Microsoft.AspNetCore.Http.Abstractions NuGet package (which targets .NET Framework). -->
   <ItemGroup>
