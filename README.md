@@ -258,7 +258,6 @@ Library.Jewelix.Infrastructure/
 │       ├── Jewelix.Logging.csproj          # SDK project — imports Package.props
 │       ├── Jewelix.Logging.Package.props   # NuGet identity, version & packaging metadata
 │       ├── Jewelix-logo.png                # Package display icon (PNG 64×64, ≤1 MB)
-│       ├── Jewelix-logo.ico                # Windows shell icon (bundled as content/)
 │       ├── GlobalUsings.cs                 # Global implicit usings
 │       ├── LoggerExtension.cs              # AddJewelixLogger / UseJewelixLogger
 │       ├── LoggerMiddleware.cs             # HTTP middleware + body capture + Sanitize
