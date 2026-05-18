@@ -65,11 +65,7 @@
     <!--   PNG display icon (required by NuGet for PackageIcon).             -->
     <None Include="$(MSBuildThisFileDirectory)Jewelix-logo.png"
           Pack="true" PackagePath="" />
-
-    <!--   ICO bundled as a Windows shell resource for consumers.            -->
-    <None Include="$(MSBuildThisFileDirectory)Jewelix-logo.ico"
-          Pack="true" PackagePath="content\" />
-
+          
     <!--   Embed the repo README so nuget.org / GitHub Packages show it.     -->
     <None Include="$(MSBuildThisFileDirectory)..\..\README.md"
           Pack="true" PackagePath="" />
