@@ -46,11 +46,11 @@
     <RepositoryType>git</RepositoryType>
 
     <!-- ── Presentation ─────────────────────────────────────────────────── -->
-    <!--   NuGet PackageIcon must be ICO; Jewelix-logo.ico is used   -->
+    <!--   NuGet PackageIcon must be PNG or JPEG; Jewelix-logo.png is used   -->
     <!--   for the nuget.org / GitHub Packages display icon.                 -->
-    <!--   Jewelix-logo.ico is bundled separately so consumers can use it    -->
+    <!--   Jewelix-logo.png is bundled separately so consumers can use it    -->
     <!--   for Windows shell integration (app icons, shortcuts, etc.).       -->
-    <PackageIcon>Jewelix-logo.ico</PackageIcon>
+    <PackageIcon>Jewelix-logo.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <!-- ── Symbols ──────────────────────────────────────────────────────── -->
@@ -62,8 +62,8 @@
 
   <!-- ── Package contents ───────────────────────────────────────────────── -->
   <ItemGroup>
-    <!--   ICO display icon (required by NuGet for PackageIcon).             -->
-    <None Include="$(MSBuildThisFileDirectory)Jewelix-logo.ico"
+    <!--   PNG display icon (required by NuGet for PackageIcon).             -->
+    <None Include="$(MSBuildThisFileDirectory)Jewelix-logo.png"
           Pack="true" PackagePath="" />
           
     <!--   Embed the repo README so nuget.org / GitHub Packages show it.     -->
