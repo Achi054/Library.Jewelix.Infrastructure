@@ -15,7 +15,7 @@
 |---|---|---|---|
 | [`Jewelix.Logging`](src/Jewelix.Logging) | `1.0.0` | `net10.0` | Serilog-backed `ILogger<T>` adapter, HTTP request/response middleware, correlation-ID propagation, sensitive-field masking, and DI registration helpers |
 
-> Additional packages (e.g. `Jewelix.Resilience`, `Jewelix.Caching`) will be added as the ecosystem grows. Each package gets its own `Package.props` so versions are managed independently.
+> Additional packages (e.g. `Jewelix.Identity`, `Jewelix.Caching`) will be added as the ecosystem grows. Each package gets its own `Package.props` so versions are managed independently.
 
 ---
 
@@ -61,7 +61,7 @@ app.UseJewelixLogger(app.Configuration);
       {
         "Name": "File",
         "Args": {
-          "path": "logs/app-.log",
+          "path": "logs/Jewelix-.log",
           "rollingInterval": "Day",
           "outputTemplate": "[{Timestamp:yyyy-MM-dd HH:mm:ss}] [{Level:u3}] [{RequestId}] [{CorrelationId}] [{ElapsedMs}ms] HTTP {Message:lj}{NewLine}{Exception}"
         }
@@ -311,16 +311,3 @@ The test suite runs **31 tests** covering:
 The `SerilogTestCollection` collection fixture forces **sequential** execution within the collection to prevent test races on the shared static `Log.Logger`.
 
 ---
-
-## 🏗️ Build configuration
-
-| Property | Value | Scope |
-|---|---|---|
-| Target framework | `net10.0` | All projects |
-| Language version | `latest` (C# 13) | All projects |
-| Nullable reference types | `enable` | All projects |
-| XML documentation | `true` | All projects |
-| Warnings as errors | `true` (prod) / `false` (tests) | Per project |
-| Suppressed warnings | `1591`, `NU5104`, `NU5105` | Shared |
-| Analysis mode | `AllEnabledByDefault` (prod) / `Default` (tests) | Per project |
-| Symbols | `.snupkg` | `Jewelix.Logging` package |
