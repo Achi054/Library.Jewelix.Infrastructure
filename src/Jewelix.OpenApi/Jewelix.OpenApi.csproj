@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- All NuGet identity, versioning, and packaging metadata lives in Jewelix.OpenApi.Package.props. -->
+  <Import Project="Jewelix.OpenApi.Package.props" />
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Jewelix.OpenApi</RootNamespace>
+    <AssemblyName>Jewelix.OpenApi</AssemblyName>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <!-- Use the shared ASP.NET Core framework reference. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.14.14" />
+  </ItemGroup>
+
+</Project>
