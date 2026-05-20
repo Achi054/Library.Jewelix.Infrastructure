@@ -7,7 +7,7 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/Solution Items/workflow/">
-    <File Path=".github/workflows/cicd.yml" />
+    <File Path=".github/workflows/cicd-logging.yml" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Jewelix.Logging/Jewelix.Logging.csproj" />

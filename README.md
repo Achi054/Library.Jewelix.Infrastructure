@@ -1,6 +1,6 @@
 # 🏗️ Library.Jewelix.Infrastructure
 
-[![CI / CD](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd.yml/badge.svg)](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd.yml)
+[![Jewelix.Logging CI](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-logging.yml/badge.svg)](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-logging.yml)
 [![Latest Release](https://img.shields.io/github/v/release/Achi054/Library.Jewelix.Infrastructure?label=Jewelix.Logging&color=blue&logo=nuget)](https://github.com/Achi054/Library.Jewelix.Infrastructure/pkgs/nuget/Jewelix.Logging)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com)
