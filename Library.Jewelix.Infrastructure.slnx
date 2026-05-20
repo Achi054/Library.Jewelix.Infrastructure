@@ -8,11 +8,14 @@
   </Folder>
   <Folder Name="/Solution Items/workflow/">
     <File Path=".github/workflows/cicd-logging.yml" />
+    <File Path=".github/workflows/cicd-openapi.yml" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Jewelix.Logging/Jewelix.Logging.csproj" />
+    <Project Path="src/Jewelix.OpenApi/Jewelix.OpenApi.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Jewelix.Logging.Tests/Jewelix.Logging.Tests.csproj" />
+    <Project Path="test/Jewelix.OpenApi.Tests/Jewelix.OpenApi.Tests.csproj" />
   </Folder>
 </Solution>
