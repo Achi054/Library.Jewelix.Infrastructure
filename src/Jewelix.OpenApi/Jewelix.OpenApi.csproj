@@ -8,6 +8,9 @@
     <RootNamespace>Jewelix.OpenApi</RootNamespace>
     <AssemblyName>Jewelix.OpenApi</AssemblyName>
     <IsPackable>true</IsPackable>
+    <!-- CA2227/CA1002: Options classes used with IConfiguration.Bind require
+         a public List<T> setter — these analyzer rules are not appropriate here. -->
+    <NoWarn>$(NoWarn);CA2227;CA1002</NoWarn>
   </PropertyGroup>
 
   <!-- Use the shared ASP.NET Core framework reference. -->
