@@ -91,7 +91,27 @@ public static class OpenApiExtensions
         var options = app.ApplicationServices.GetRequiredService<JewelixOpenApiOptions>();
 
         // Optional environment-level override — presentation properties only.
-        configuration?.GetSection(JewelixOpenApiOptions.SectionName).Bind(options);
+        // A fresh options object is bound from config so we can merge by Name
+        // without disrupting the EnableBearerAuth that was set in code.
+        if (configuration is not null)
+        {
+            var configOptions = new JewelixOpenApiOptions { Documents = [] };
+            configuration.GetSection(JewelixOpenApiOptions.SectionName).Bind(configOptions);
+
+            foreach (var configDoc in configOptions.Documents)
+            {
+                var target = options.Documents.FirstOrDefault(d => d.Name == configDoc.Name);
+                if (target is null) continue;
+
+                target.Title           = configDoc.Title;
+                target.Version         = configDoc.Version;
+                target.ScalarRoutePrefix = configDoc.ScalarRoutePrefix;
+                if (configDoc.Description is not null)
+                    target.Description = configDoc.Description;
+                // EnableBearerAuth is intentionally NOT applied from config —
+                // transformer registration happened at AddJewelixOpenApi time.
+            }
+        }
 
         foreach (var document in options.Documents)
         {
