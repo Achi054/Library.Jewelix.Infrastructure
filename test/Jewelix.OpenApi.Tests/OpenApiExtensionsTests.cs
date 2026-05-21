@@ -139,7 +139,7 @@ public class OpenApiExtensionsTests
             var target = options.Documents.FirstOrDefault(d => d.Name == configDoc.Name);
             if (target is null) continue;
             if (configDoc.Title != defaults.Title)
-                target.Title = configDoc.Title;
+            target.Title = configDoc.Title;
             if (configDoc.Version != defaults.Version)
                 target.Version = configDoc.Version;
             if (configDoc.ScalarRoutePrefix != defaults.ScalarRoutePrefix)
