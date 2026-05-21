@@ -98,14 +98,23 @@ public static class OpenApiExtensions
             var configOptions = new JewelixOpenApiOptions { Documents = [] };
             configuration.GetSection(JewelixOpenApiOptions.SectionName).Bind(configOptions);
 
+            // Compare each config value against the JewelixOpenApiDocument defaults.
+            // IConfiguration.Bind cannot distinguish "absent from config" from "set to
+            // the default value", so we treat any value that equals the default as
+            // "not specified" and leave the code-configured value intact.
+            var defaults = new JewelixOpenApiDocument();
+
             foreach (var configDoc in configOptions.Documents)
             {
                 var target = options.Documents.FirstOrDefault(d => d.Name == configDoc.Name);
                 if (target is null) continue;
 
-                target.Title           = configDoc.Title;
-                target.Version         = configDoc.Version;
-                target.ScalarRoutePrefix = configDoc.ScalarRoutePrefix;
+                if (configDoc.Title != defaults.Title)
+                    target.Title = configDoc.Title;
+                if (configDoc.Version != defaults.Version)
+                    target.Version = configDoc.Version;
+                if (configDoc.ScalarRoutePrefix != defaults.ScalarRoutePrefix)
+                    target.ScalarRoutePrefix = configDoc.ScalarRoutePrefix;
                 if (configDoc.Description is not null)
                     target.Description = configDoc.Description;
                 // EnableBearerAuth is intentionally NOT applied from config —

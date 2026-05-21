@@ -37,19 +37,79 @@ public class OpenApiExtensionsTests
             .Build();
 
         // Simulate the merge logic used by UseJewelixOpenApi:
-        // bind config into a fresh options, then merge presentation properties by Name.
+        // bind config into a fresh options, then merge by Name using compare-against-defaults
+        // so that properties absent from config do not silently reset code-configured values.
         var options = new JewelixOpenApiOptions();
         options.Documents = [new JewelixOpenApiDocument { Name = "v1", Title = "Original Title" }];
 
         var configOptions = new JewelixOpenApiOptions { Documents = [] };
         configuration.GetSection(JewelixOpenApiOptions.SectionName).Bind(configOptions);
+        var defaults = new JewelixOpenApiDocument();
         foreach (var configDoc in configOptions.Documents)
         {
             var target = options.Documents.FirstOrDefault(d => d.Name == configDoc.Name);
-            if (target is not null) target.Title = configDoc.Title;
+            if (target is null) continue;
+            if (configDoc.Title != defaults.Title)
+                target.Title = configDoc.Title;
+            if (configDoc.Version != defaults.Version)
+                target.Version = configDoc.Version;
+            if (configDoc.ScalarRoutePrefix != defaults.ScalarRoutePrefix)
+                target.ScalarRoutePrefix = configDoc.ScalarRoutePrefix;
+            if (configDoc.Description is not null)
+                target.Description = configDoc.Description;
+            // EnableBearerAuth deliberately not applied here.
         }
 
         options.Documents[0].Title.ShouldBe("Overridden Title");
+    }
+
+    [Fact]
+    public void UseJewelixOpenApi_WithPartialConfigSection_PreservesUnspecifiedCodeValues()
+    {
+        // When config only specifies Title, the code-configured Version and
+        // ScalarRoutePrefix must be left intact (not silently reset to defaults).
+        var inMemorySettings = new Dictionary<string, string?>
+        {
+            ["OpenApi:Documents:0:Name"]  = "v1",
+            ["OpenApi:Documents:0:Title"] = "Config Title",
+            // Version and ScalarRoutePrefix intentionally absent from config
+        };
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(inMemorySettings)
+            .Build();
+
+        var options = new JewelixOpenApiOptions();
+        options.Documents =
+        [
+            new JewelixOpenApiDocument
+            {
+                Name             = "v1",
+                Title            = "Code Title",
+                Version          = "2.0",
+                ScalarRoutePrefix = "docs",
+            },
+        ];
+
+        var configOptions = new JewelixOpenApiOptions { Documents = [] };
+        configuration.GetSection(JewelixOpenApiOptions.SectionName).Bind(configOptions);
+        var defaults = new JewelixOpenApiDocument();
+        foreach (var configDoc in configOptions.Documents)
+        {
+            var target = options.Documents.FirstOrDefault(d => d.Name == configDoc.Name);
+            if (target is null) continue;
+            if (configDoc.Title != defaults.Title)
+                target.Title = configDoc.Title;
+            if (configDoc.Version != defaults.Version)
+                target.Version = configDoc.Version;
+            if (configDoc.ScalarRoutePrefix != defaults.ScalarRoutePrefix)
+                target.ScalarRoutePrefix = configDoc.ScalarRoutePrefix;
+            if (configDoc.Description is not null)
+                target.Description = configDoc.Description;
+        }
+
+        options.Documents[0].Title.ShouldBe("Config Title");          // overridden by config
+        options.Documents[0].Version.ShouldBe("2.0");                 // preserved from code
+        options.Documents[0].ScalarRoutePrefix.ShouldBe("docs");      // preserved from code
     }
 
     [Fact]
@@ -73,11 +133,19 @@ public class OpenApiExtensionsTests
         // Simulate UseJewelixOpenApi merge — EnableBearerAuth is intentionally excluded.
         var configOptions = new JewelixOpenApiOptions { Documents = [] };
         configuration.GetSection(JewelixOpenApiOptions.SectionName).Bind(configOptions);
+        var defaults = new JewelixOpenApiDocument();
         foreach (var configDoc in configOptions.Documents)
         {
             var target = options.Documents.FirstOrDefault(d => d.Name == configDoc.Name);
             if (target is null) continue;
-            target.Title = configDoc.Title;
+            if (configDoc.Title != defaults.Title)
+                target.Title = configDoc.Title;
+            if (configDoc.Version != defaults.Version)
+                target.Version = configDoc.Version;
+            if (configDoc.ScalarRoutePrefix != defaults.ScalarRoutePrefix)
+                target.ScalarRoutePrefix = configDoc.ScalarRoutePrefix;
+            if (configDoc.Description is not null)
+                target.Description = configDoc.Description;
             // EnableBearerAuth deliberately not applied here.
         }
 
