@@ -13,9 +13,7 @@
       "Bash(dotnet tool update *)",
       "Bash(dotnet tool uninstall *)",
       "Bash(dotnet --version)",
-      "Bash(dotnet --info)",
-      "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(dotnet --info)"
     ]
   }
 }
