@@ -1,7 +1,9 @@
 # 🏗️ Library.Jewelix.Infrastructure
 
-[![CI / CD](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd.yml/badge.svg)](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd.yml)
+[![Jewelix.Logging CI](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-logging.yml/badge.svg)](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-logging.yml)
+[![Jewelix.OpenApi CI](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-openapi.yml/badge.svg)](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-openapi.yml)
 [![Latest Release](https://img.shields.io/github/v/release/Achi054/Library.Jewelix.Infrastructure?label=Jewelix.Logging&color=blue&logo=nuget)](https://github.com/Achi054/Library.Jewelix.Infrastructure/pkgs/nuget/Jewelix.Logging)
+[![Latest Release](https://img.shields.io/github/v/release/Achi054/Library.Jewelix.Infrastructure?label=Jewelix.OpenApi&color=purple&logo=nuget)](https://github.com/Achi054/Library.Jewelix.Infrastructure/pkgs/nuget/Jewelix.OpenApi)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com)
 
@@ -14,6 +16,7 @@
 | Package | Version | Target | Description |
 |---|---|---|---|
 | [`Jewelix.Logging`](src/Jewelix.Logging) | `1.0.0` | `net10.0` | Serilog-backed `ILogger<T>` adapter, HTTP request/response middleware, correlation-ID propagation, sensitive-field masking, and DI registration helpers |
+| [`Jewelix.OpenApi`](src/Jewelix.OpenApi) | `1.0.0` | `net10.0` | Microsoft OpenAPI + Scalar UI integration with multi-document support, optional Bearer/JWT auth, and config-section override |
 
 > Additional packages (e.g. `Jewelix.Identity`, `Jewelix.Caching`) will be added as the ecosystem grows. Each package gets its own `Package.props` so versions are managed independently.
 
@@ -74,6 +77,153 @@ app.UseJewelixLogger(app.Configuration);
 > 💡 **Console sink** is automatically added by `UseJewelixLogger` — no `WriteTo.Console` entry is needed in `appsettings.json`. Use `LoggerExtensions.OutputTemplate` as the `outputTemplate` value for any additional sinks to keep output consistent.
 >
 > 🐞 **Debug body-capture sinks** should use `LoggerExtensions.DebugOutputTemplate` instead — it omits `{ElapsedMs}`, which is only pushed onto `LogContext` for the HTTP summary event, not for individual body-capture events.
+
+---
+
+## 🚀 Quick Start — `Jewelix.OpenApi`
+
+### 1️⃣ Add the NuGet reference
+
+```xml
+<PackageReference Include="Jewelix.OpenApi" Version="1.0.0" />
+```
+
+### 2️⃣ Register services (DI)
+
+```csharp
+// Program.cs — zero-config: registers a single "v1" document
+builder.Services.AddJewelixOpenApi();
+
+// Or configure explicitly:
+builder.Services.AddJewelixOpenApi(opts =>
+{
+    opts.Documents =
+    [
+        new() { Name = "v1", Title = "Jewelix API v1", EnableBearerAuth = true },
+        new() { Name = "v2", Title = "Jewelix API v2", EnableBearerAuth = true },
+    ];
+});
+```
+
+### 3️⃣ Wire up the endpoints
+
+```csharp
+// Program.cs — after Build()
+app.UseJewelixOpenApi(app.Configuration);
+```
+
+`UseJewelixOpenApi` maps one OpenAPI JSON endpoint and one Scalar UI page per document:
+
+| Document | JSON endpoint | Scalar UI |
+|---|---|---|
+| `v1` | `/openapi/v1.json` | `/scalar/v1/` |
+| `v2` | `/openapi/v2.json` | `/scalar/v2/` |
+
+### 4️⃣ Optional — override presentation properties from `appsettings.json`
+
+`UseJewelixOpenApi` merges the `OpenApi` config section on top of the code-configured options at startup. Only presentation properties are overridable — `EnableBearerAuth` is excluded because its transformer must be registered during DI setup.
+
+#### Single-document app
+
+```json
+{
+  "OpenApi": {
+    "Documents": [
+      {
+        "Name": "v1",
+        "Title": "Jewelix API — Production",
+        "Version": "2.1",
+        "Description": "Public-facing REST API. Contact platform-team@jewelix.io for access.",
+        "ScalarRoutePrefix": "docs"
+      }
+    ]
+  }
+}
+```
+
+This configuration produces:
+
+| Endpoint | URL |
+|---|---|
+| OpenAPI JSON | `/openapi/v1.json` |
+| Scalar UI | `/docs/v1/` |
+
+#### Multi-document app (e.g. public + internal APIs)
+
+```json
+{
+  "OpenApi": {
+    "Documents": [
+      {
+        "Name": "public",
+        "Title": "Jewelix Public API",
+        "Version": "1.0",
+        "Description": "Stable, versioned endpoints for third-party integrations.",
+        "ScalarRoutePrefix": "scalar"
+      },
+      {
+        "Name": "internal",
+        "Title": "Jewelix Internal API",
+        "Version": "1.0",
+        "Description": "Back-office endpoints — not intended for external consumers.",
+        "ScalarRoutePrefix": "scalar"
+      }
+    ]
+  }
+}
+```
+
+#### Combined with the Serilog section
+
+Both packages read from the same `appsettings.json` — the sections are independent:
+
+```json
+{
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "File",
+        "Args": {
+          "path": "logs/Jewelix-.log",
+          "rollingInterval": "Day"
+        }
+      }
+    ]
+  },
+  "OpenApi": {
+    "Documents": [
+      {
+        "Name": "v1",
+        "Title": "Jewelix API",
+        "Version": "1.0",
+        "Description": "Primary API surface."
+      }
+    ]
+  }
+}
+```
+
+#### Property reference
+
+| Property | Type | Overridable via config | Default |
+|---|---|---|---|
+| `Name` | `string` | Used as lookup key only — must match a code-registered document | `"v1"` |
+| `Title` | `string` | ✅ Yes | `"API"` |
+| `Version` | `string` | ✅ Yes | `"1.0"` |
+| `Description` | `string?` | ✅ Yes | `null` |
+| `ScalarRoutePrefix` | `string` | ✅ Yes | `"scalar"` |
+| `EnableBearerAuth` | `bool` | ❌ Code only | `false` |
+
+> ⚠️ **Partial overrides are safe.** Properties absent from the config section are left untouched — only keys that are explicitly present and differ from the default are applied. Code-configured values (e.g. a custom `Version` or `ScalarRoutePrefix`) are preserved when the config section omits them.
+>
+> ⚠️ **`EnableBearerAuth` is code-only.** It must be set in `AddJewelixOpenApi` — it drives transformer registration which happens during DI setup and cannot be changed at runtime via config.
 
 ---
 
@@ -180,11 +330,35 @@ Only `application/json`, `application/xml`, `application/x-www-form-urlencoded`,
 | `xunit.runner.visualstudio` | `2.8.2` | VS / `dotnet test` adapter |
 | `Shouldly` | `4.3.0` | Fluent assertion library |
 
+### `Jewelix.OpenApi` — runtime
+
+| Package | Version | Purpose |
+|---|---|---|
+| `Microsoft.AspNetCore.App` _(framework ref)_ | `10.0` | HTTP abstractions, routing, configuration |
+| `Microsoft.AspNetCore.OpenApi` | `10.0.8` | OpenAPI document generation and transformer pipeline |
+| `Scalar.AspNetCore` | `2.14.14` | Modern API documentation UI |
+
+### `Jewelix.OpenApi.Tests` — test-only
+
+| Package | Version | Purpose |
+|---|---|---|
+| `Microsoft.NET.Test.Sdk` | `17.12.0` | Test runner host |
+| `Microsoft.AspNetCore.TestHost` | `10.0.0` | In-process HTTP server |
+| `Microsoft.AspNetCore.OpenApi` | `10.0.8` | OpenAPI model access in tests |
+| `xunit` | `2.9.2` | Test framework |
+| `xunit.runner.visualstudio` | `2.8.2` | VS / `dotnet test` adapter |
+| `Shouldly` | `4.3.0` | Fluent assertion library |
+
 ---
 
 ## 🚦 CI / CD
 
-The pipeline lives in [`.github/workflows/cicd.yml`](.github/workflows/cicd.yml) and runs on **ubuntu-latest** with .NET 10.
+Each package has its own independent pipeline so versions can be released separately.
+
+| Pipeline | File | Package |
+|---|---|---|
+| `cicd-logging.yml` | [`.github/workflows/cicd-logging.yml`](.github/workflows/cicd-logging.yml) | `Jewelix.Logging` |
+| `cicd-openapi.yml` | [`.github/workflows/cicd-openapi.yml`](.github/workflows/cicd-openapi.yml) | `Jewelix.OpenApi` |
 
 ### Pipeline overview
 
@@ -194,10 +368,12 @@ push / PR ──► ci  (Build & Test)
                 └── tag v*.*.* ──► publish  (Pack & Push)
 ```
 
-| Job | Trigger | Steps |
-|---|---|---|
-| **Build & Test** (`ci`) | Every push to `main`; every pull request | restore → build → test → upload TRX results → annotate PR via `dorny/test-reporter` |
-| **Pack & Publish** (`publish`) | Push of a `v*.*.*` tag (e.g. `v1.2.3`) | restore → build (versioned) → pack → push `.nupkg` + `.snupkg` to GitHub Packages |
+| Job | Workflow | Trigger | Steps |
+|---|---|---|---|
+| **Build & Test** | `cicd-logging.yml` | Push to `main`; every PR | restore → build → test → upload TRX → annotate PR |
+| **Pack & Publish** | `cicd-logging.yml` | Push of `v*.*.*` tag | restore → build → pack `Jewelix.Logging` → push `.nupkg` + `.snupkg` |
+| **Build & Test** | `cicd-openapi.yml` | Push to `main`; every PR | restore → build → test → upload TRX → annotate PR |
+| **Pack & Publish** | `cicd-openapi.yml` | Push of `v*.*.*` tag | restore → build → pack `Jewelix.OpenApi` → push `.nupkg` + `.snupkg` |
 
 ### Required permissions
 
@@ -251,28 +427,46 @@ Then reference the package:
 Library.Jewelix.Infrastructure/
 ├── .github/
 │   └── workflows/
-│       └── cicd.yml                        # CI: build+test; CD: pack+publish on tag
+│       ├── cicd-logging.yml                # CI/CD for Jewelix.Logging (independent release)
+│       └── cicd-openapi.yml                # CI/CD for Jewelix.OpenApi (independent release)
 │
 ├── src/
-│   └── Jewelix.Logging/                    # 📦 Package: Jewelix.Logging v1.0.0
-│       ├── Jewelix.Logging.csproj          # SDK project — imports Package.props
-│       ├── Jewelix.Logging.Package.props   # NuGet identity, version & packaging metadata
+│   ├── Jewelix.Logging/                    # 📦 Package: Jewelix.Logging v1.0.0
+│   │   ├── Jewelix.Logging.csproj          # SDK project — imports Package.props
+│   │   ├── Jewelix.Logging.Package.props   # NuGet identity, version & packaging metadata
+│   │   ├── Jewelix-logo.png                # Package display icon (PNG 64×64, ≤1 MB)
+│   │   ├── GlobalUsings.cs                 # Global implicit usings
+│   │   ├── LoggerExtension.cs              # AddJewelixLogger / UseJewelixLogger
+│   │   ├── LoggerMiddleware.cs             # HTTP middleware + body capture + Sanitize
+│   │   └── SerilogLogger.cs               # ILogger<T> → Serilog adapter
+│   │
+│   └── Jewelix.OpenApi/                    # 📦 Package: Jewelix.OpenApi v1.0.0
+│       ├── Jewelix.OpenApi.csproj          # SDK project — imports Package.props
+│       ├── Jewelix.OpenApi.Package.props   # NuGet identity, version & packaging metadata
 │       ├── Jewelix-logo.png                # Package display icon (PNG 64×64, ≤1 MB)
 │       ├── GlobalUsings.cs                 # Global implicit usings
-│       ├── LoggerExtension.cs              # AddJewelixLogger / UseJewelixLogger
-│       ├── LoggerMiddleware.cs             # HTTP middleware + body capture + Sanitize
-│       └── SerilogLogger.cs               # ILogger<T> → Serilog adapter
+│       ├── JewelixOpenApiDocument.cs       # Per-document config (Name, Title, Version, etc.)
+│       ├── JewelixOpenApiOptions.cs        # Root options — Documents collection + SectionName
+│       ├── BearerSecuritySchemeTransformer.cs  # Internal IOpenApiDocumentTransformer
+│       └── OpenApiExtensions.cs            # AddJewelixOpenApi / UseJewelixOpenApi
 │
 ├── test/
-│   └── Jewelix.Logging.Tests/              # 🧪 31 tests — xUnit + Shouldly + TestHost
-│       ├── Helper/
-│       │   ├── InMemorySink.cs             # Thread-safe Serilog sink for assertions
-│       │   └── SerilogTestCollection.cs    # [CollectionDefinition] — sequential execution
-│       ├── DependencyInjectionTests.cs     # AddJewelixLogger DI registration
-│       ├── LoggerMiddlewareTests.cs        # Middleware: correlation ID, body capture, masking
-│       ├── SanitizeTests.cs               # Sanitize: masking, truncation
-│       ├── SerilogLoggerTests.cs          # SerilogLogger<T>: level mapping, scope, context
-│       └── UseJewelixLoggerTests.cs       # UseJewelixLogger: pipeline + null guards
+│   ├── Jewelix.Logging.Tests/              # 🧪 31 tests — xUnit + Shouldly + TestHost
+│   │   ├── Helper/
+│   │   │   ├── InMemorySink.cs             # Thread-safe Serilog sink for assertions
+│   │   │   └── SerilogTestCollection.cs    # [CollectionDefinition] — sequential execution
+│   │   ├── DependencyInjectionTests.cs     # AddJewelixLogger DI registration
+│   │   ├── LoggerMiddlewareTests.cs        # Middleware: correlation ID, body capture, masking
+│   │   ├── SanitizeTests.cs               # Sanitize: masking, truncation
+│   │   ├── SerilogLoggerTests.cs          # SerilogLogger<T>: level mapping, scope, context
+│   │   └── UseJewelixLoggerTests.cs       # UseJewelixLogger: pipeline + null guards
+│   │
+│   └── Jewelix.OpenApi.Tests/              # 🧪 29 tests — xUnit + Shouldly + TestHost
+│       ├── BearerSecuritySchemeTransformerTests.cs  # Transformer: Bearer scheme injection
+│       ├── DependencyInjectionTests.cs     # AddJewelixOpenApi DI registration
+│       ├── JewelixOpenApiOptionsTests.cs   # Options defaults and SectionName
+│       ├── OpenApiExtensionsTests.cs       # UseJewelixOpenApi guards + config override
+│       └── UseJewelixOpenApiTests.cs       # Full pipeline via WebApplication + TestServer
 │
 ├── .editorconfig                           # C# code style rules
 ├── .gitignore
@@ -297,7 +491,9 @@ dotnet test --verbosity normal
 dotnet test --filter "FullyQualifiedName~LoggerMiddlewareTests"
 ```
 
-The test suite runs **31 tests** covering:
+The test suite runs **60 tests** across two test projects.
+
+### `Jewelix.Logging.Tests` — 31 tests
 
 | Test class | Coverage area |
 |---|---|
@@ -308,5 +504,15 @@ The test suite runs **31 tests** covering:
 | `UseJewelixLoggerTests` | Serilog config from `appsettings.json`, middleware pipeline registration, null guards |
 
 The `SerilogTestCollection` collection fixture forces **sequential** execution within the collection to prevent test races on the shared static `Log.Logger`.
+
+### `Jewelix.OpenApi.Tests` — 29 tests
+
+| Test class | Coverage area |
+|---|---|
+| `JewelixOpenApiOptionsTests` | Default values for all options properties; `SectionName` constant |
+| `BearerSecuritySchemeTransformerTests` | Bearer scheme injection, idempotency, preservation of existing schemes |
+| `DependencyInjectionTests` | `AddJewelixOpenApi` — null guard, singleton registration, multi-document, chaining |
+| `OpenApiExtensionsTests` | `UseJewelixOpenApi` null guard, non-`IEndpointRouteBuilder` guard, config override, `EnableBearerAuth` exclusion |
+| `UseJewelixOpenApiTests` | Full pipeline via `WebApplication` + `TestHost` — JSON endpoints, Scalar UI, Bearer auth in spec |
 
 ---
