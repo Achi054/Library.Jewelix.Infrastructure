@@ -63,9 +63,6 @@
     <!-- PNG icon at package root -->
     <None Include="$(MSBuildThisFileDirectory)Jewelix-logo.png"
           Pack="true" PackagePath="" />
-    <!-- ICO bundled as Windows shell content -->
-    <None Include="$(MSBuildThisFileDirectory)Jewelix-logo.ico"
-          Pack="true" PackagePath="content\" />
     <!-- README shown on NuGet / GitHub Packages -->
     <None Include="$(MSBuildThisFileDirectory)..\..\README.md"
           Pack="true" PackagePath="" />
