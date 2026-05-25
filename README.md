@@ -119,7 +119,11 @@ app.UseJewelixOpenApi(app.Configuration);
 | `v1` | `/openapi/v1.json` | `/scalar/v1/` |
 | `v2` | `/openapi/v2.json` | `/scalar/v2/` |
 
-### 4️⃣ Optional — override titles from `appsettings.json`
+### 4️⃣ Optional — override presentation properties from `appsettings.json`
+
+`UseJewelixOpenApi` merges the `OpenApi` config section on top of the code-configured options at startup. Only presentation properties are overridable — `EnableBearerAuth` is excluded because its transformer must be registered during DI setup.
+
+#### Single-document app
 
 ```json
 {
@@ -128,15 +132,98 @@ app.UseJewelixOpenApi(app.Configuration);
       {
         "Name": "v1",
         "Title": "Jewelix API — Production",
-        "Version": "1.0",
-        "Description": "Internal production API."
+        "Version": "2.1",
+        "Description": "Public-facing REST API. Contact platform-team@jewelix.io for access.",
+        "ScalarRoutePrefix": "docs"
       }
     ]
   }
 }
 ```
 
-> ⚠️ `EnableBearerAuth` must be set in code at `AddJewelixOpenApi` time — it drives transformer registration which happens during DI setup and cannot be changed via config.
+This configuration produces:
+
+| Endpoint | URL |
+|---|---|
+| OpenAPI JSON | `/openapi/v1.json` |
+| Scalar UI | `/docs/v1/` |
+
+#### Multi-document app (e.g. public + internal APIs)
+
+```json
+{
+  "OpenApi": {
+    "Documents": [
+      {
+        "Name": "public",
+        "Title": "Jewelix Public API",
+        "Version": "1.0",
+        "Description": "Stable, versioned endpoints for third-party integrations.",
+        "ScalarRoutePrefix": "scalar"
+      },
+      {
+        "Name": "internal",
+        "Title": "Jewelix Internal API",
+        "Version": "1.0",
+        "Description": "Back-office endpoints — not intended for external consumers.",
+        "ScalarRoutePrefix": "scalar"
+      }
+    ]
+  }
+}
+```
+
+#### Combined with the Serilog section
+
+Both packages read from the same `appsettings.json` — the sections are independent:
+
+```json
+{
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "File",
+        "Args": {
+          "path": "logs/Jewelix-.log",
+          "rollingInterval": "Day"
+        }
+      }
+    ]
+  },
+  "OpenApi": {
+    "Documents": [
+      {
+        "Name": "v1",
+        "Title": "Jewelix API",
+        "Version": "1.0",
+        "Description": "Primary API surface."
+      }
+    ]
+  }
+}
+```
+
+#### Property reference
+
+| Property | Type | Overridable via config | Default |
+|---|---|---|---|
+| `Name` | `string` | Used as lookup key only — must match a code-registered document | `"v1"` |
+| `Title` | `string` | ✅ Yes | `"API"` |
+| `Version` | `string` | ✅ Yes | `"1.0"` |
+| `Description` | `string?` | ✅ Yes | `null` |
+| `ScalarRoutePrefix` | `string` | ✅ Yes | `"scalar"` |
+| `EnableBearerAuth` | `bool` | ❌ Code only | `false` |
+
+> ⚠️ **Partial overrides are safe.** Properties absent from the config section are left untouched — only keys that are explicitly present and differ from the default are applied. Code-configured values (e.g. a custom `Version` or `ScalarRoutePrefix`) are preserved when the config section omits them.
+>
+> ⚠️ **`EnableBearerAuth` is code-only.** It must be set in `AddJewelixOpenApi` — it drives transformer registration which happens during DI setup and cannot be changed at runtime via config.
 
 ---
 
@@ -374,7 +461,7 @@ Library.Jewelix.Infrastructure/
 │   │   ├── SerilogLoggerTests.cs          # SerilogLogger<T>: level mapping, scope, context
 │   │   └── UseJewelixLoggerTests.cs       # UseJewelixLogger: pipeline + null guards
 │   │
-│   └── Jewelix.OpenApi.Tests/              # 🧪 27 tests — xUnit + Shouldly + TestHost
+│   └── Jewelix.OpenApi.Tests/              # 🧪 29 tests — xUnit + Shouldly + TestHost
 │       ├── BearerSecuritySchemeTransformerTests.cs  # Transformer: Bearer scheme injection
 │       ├── DependencyInjectionTests.cs     # AddJewelixOpenApi DI registration
 │       ├── JewelixOpenApiOptionsTests.cs   # Options defaults and SectionName
@@ -404,7 +491,7 @@ dotnet test --verbosity normal
 dotnet test --filter "FullyQualifiedName~LoggerMiddlewareTests"
 ```
 
-The test suite runs **58 tests** across two test projects.
+The test suite runs **60 tests** across two test projects.
 
 ### `Jewelix.Logging.Tests` — 31 tests
 
@@ -418,7 +505,7 @@ The test suite runs **58 tests** across two test projects.
 
 The `SerilogTestCollection` collection fixture forces **sequential** execution within the collection to prevent test races on the shared static `Log.Logger`.
 
-### `Jewelix.OpenApi.Tests` — 27 tests
+### `Jewelix.OpenApi.Tests` — 29 tests
 
 | Test class | Coverage area |
 |---|---|
