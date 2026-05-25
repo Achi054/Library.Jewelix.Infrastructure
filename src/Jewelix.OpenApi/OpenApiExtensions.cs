@@ -117,8 +117,6 @@ public static class OpenApiExtensions
                     target.ScalarRoutePrefix = configDoc.ScalarRoutePrefix;
                 if (configDoc.Description is not null)
                     target.Description = configDoc.Description;
-                // EnableBearerAuth is intentionally NOT applied from config —
-                // transformer registration happened at AddJewelixOpenApi time.
             }
         }
 
