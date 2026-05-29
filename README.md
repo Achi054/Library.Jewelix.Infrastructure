@@ -2,8 +2,10 @@
 
 [![Jewelix.Logging CI](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-logging.yml/badge.svg)](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-logging.yml)
 [![Jewelix.OpenApi CI](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-openapi.yml/badge.svg)](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-openapi.yml)
+[![Jewelix.HealthChecks CI](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-healthchecks.yml/badge.svg)](https://github.com/Achi054/Library.Jewelix.Infrastructure/actions/workflows/cicd-healthchecks.yml)
 [![Latest Release](https://img.shields.io/github/v/release/Achi054/Library.Jewelix.Infrastructure?label=Jewelix.Logging&color=blue&logo=nuget)](https://github.com/Achi054/Library.Jewelix.Infrastructure/pkgs/nuget/Jewelix.Logging)
 [![Latest Release](https://img.shields.io/github/v/release/Achi054/Library.Jewelix.Infrastructure?label=Jewelix.OpenApi&color=purple&logo=nuget)](https://github.com/Achi054/Library.Jewelix.Infrastructure/pkgs/nuget/Jewelix.OpenApi)
+[![Latest Release](https://img.shields.io/github/v/release/Achi054/Library.Jewelix.Infrastructure?label=Jewelix.HealthChecks&color=green&logo=nuget)](https://github.com/Achi054/Library.Jewelix.Infrastructure/pkgs/nuget/Jewelix.HealthChecks)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com)
 
@@ -17,6 +19,7 @@
 |---|---|---|---|
 | [`Jewelix.Logging`](src/Jewelix.Logging) | `1.0.0` | `net10.0` | Serilog-backed `ILogger<T>` adapter, HTTP request/response middleware, correlation-ID propagation, sensitive-field masking, and DI registration helpers |
 | [`Jewelix.OpenApi`](src/Jewelix.OpenApi) | `1.0.0` | `net10.0` | Microsoft OpenAPI + Scalar UI integration with multi-document support, optional Bearer/JWT auth, and config-section override |
+| [`Jewelix.HealthChecks`](src/Jewelix.HealthChecks) | `1.0.0` | `net10.0` | SQL Server + external API health checks, liveness/readiness endpoints, HealthCheckUI dashboard, InMemory storage, Admin-only authorization |
 
 > Additional packages (e.g. `Jewelix.Identity`, `Jewelix.Caching`) will be added as the ecosystem grows. Each package gets its own `Package.props` so versions are managed independently.
 
@@ -227,6 +230,99 @@ Both packages read from the same `appsettings.json` — the sections are indepen
 
 ---
 
+## 🚀 Quick Start — `Jewelix.HealthChecks`
+
+### 1️⃣ Add the NuGet reference
+
+```xml
+<PackageReference Include="Jewelix.HealthChecks" Version="1.0.0" />
+```
+
+### 2️⃣ Register services (DI)
+
+```csharp
+// Program.cs — pass IConfiguration so root keys are bound automatically:
+builder.Services.AddJewelixHealthChecks(builder.Configuration);
+
+// Or mix both — delegate sets defaults, config wins on top:
+builder.Services.AddJewelixHealthChecks(
+    configuration: builder.Configuration,
+    configure: opts => opts.ConnectionString = "Server=fallback;");
+```
+
+### 3️⃣ Register the Admin authorization policy
+
+`Jewelix.HealthChecks` protects the liveness, readiness, and UI endpoints with the
+`AdminPolicyName` policy (default: `"Admin"`). Register a matching policy in your app:
+
+```csharp
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+});
+```
+
+### 4️⃣ Wire up the endpoints
+
+```csharp
+// Program.cs — after Build()
+app.UseJewelixHealthChecks();
+```
+
+`UseJewelixHealthChecks` maps four endpoints (paths are fixed constants):
+
+| Endpoint | Path | Auth | Purpose |
+|---|---|---|---|
+| Liveness | `/healthz/live` | Admin | Process-alive signal — runs only `"live"`-tagged checks |
+| Readiness | `/healthz/ready` | Admin | Dependency checks — SQL Server, external services |
+| UI data feed | `/healthz/ui-feed` | None | JSON feed polled by the HealthCheckUI dashboard |
+| Dashboard | `/healthchecks-ui` | Admin | HealthCheckUI browser interface |
+
+> ⚠️ **UI data feed is intentionally unprotected.** HealthCheckUI polls it from the server side and has no mechanism to pass credentials. Restrict it at the network/host level (firewall, `RequireHost`, reverse-proxy rules) if the endpoint must not be publicly reachable.
+
+### 5️⃣ Configure in `appsettings.json`
+
+```json
+{
+  "ConnectionString": "Server=localhost;Database=MyDb;Integrated Security=true;",
+  "Services": [
+    { "Name": "Payment API", "Uri": "https://payments.example.com" },
+    { "Name": "Auth API",    "Uri": "https://auth.example.com" }
+  ],
+  "HealthChecksUI": {
+    "HealthChecks": [
+      { "Name": "All checks", "Uri": "http://localhost:5000/healthz/ui-feed" }
+    ],
+    "EvaluationTimeinSeconds": 10,
+    "MinimumSecondsBetweenFailureNotifications": 60
+  }
+}
+```
+
+> 💡 `ConnectionString` and `Services` are read from the **root** of `appsettings.json`, not a named section. The library appends `/health` to each service URI automatically — `https://payments.example.com` becomes the probe URL `https://payments.example.com/health`.
+
+#### Constants (fixed — not configurable)
+
+| Constant | Value |
+|---|---|
+| `LivenessPath` | `"/healthz/live"` |
+| `ReadinessPath` | `"/healthz/ready"` |
+| `UiFeedPath` | `"/healthz/ui-feed"` |
+| `UiPath` | `"/healthchecks-ui"` |
+| `AdminPolicyName` | `"Admin"` |
+| `ConnectionCheckName` | `"sql-server"` |
+
+#### Config-bindable (root `appsettings.json` keys — config wins over delegate)
+
+| Property | Type | Config key | Default |
+|---|---|---|---|
+| `ConnectionString` | `string?` | `ConnectionString` | `null` (SQL check disabled) |
+| `Services` | `List<JewelixServiceCheck>` | `Services` | `[]` |
+
+> ⚠️ **Config wins over the delegate.** When both are provided, `AddJewelixHealthChecks` applies the delegate first then binds the config root keys on top. An absent or empty `Services` array in config preserves the delegate-configured list.
+
+---
+
 ## 📋 Log Format
 
 ### Standard (Information and above)
@@ -349,6 +445,27 @@ Only `application/json`, `application/xml`, `application/x-www-form-urlencoded`,
 | `xunit.runner.visualstudio` | `2.8.2` | VS / `dotnet test` adapter |
 | `Shouldly` | `4.3.0` | Fluent assertion library |
 
+### `Jewelix.HealthChecks` — runtime
+
+| Package | Version | Purpose |
+|---|---|---|
+| `Microsoft.AspNetCore.App` _(framework ref)_ | `10.0` | HTTP abstractions, routing, DI, configuration |
+| `AspNetCore.HealthChecks.SqlServer` | `9.0.0` | SQL Server connectivity check |
+| `AspNetCore.HealthChecks.Uris` | `9.0.0` | External URL/API reachability check |
+| `AspNetCore.HealthChecks.UI` | `9.0.0` | HealthCheckUI dashboard and polling engine |
+| `AspNetCore.HealthChecks.UI.Client` | `9.0.0` | `UIResponseWriter` for JSON health responses |
+| `AspNetCore.HealthChecks.UI.InMemory.Storage` | `9.0.0` | In-process storage for HealthCheckUI history |
+
+### `Jewelix.HealthChecks.Tests` — test-only
+
+| Package | Version | Purpose |
+|---|---|---|
+| `Microsoft.NET.Test.Sdk` | `17.12.0` | Test runner host |
+| `Microsoft.AspNetCore.TestHost` | `10.0.0` | In-process HTTP server |
+| `xunit` | `2.9.2` | Test framework |
+| `xunit.runner.visualstudio` | `2.8.2` | VS / `dotnet test` adapter |
+| `Shouldly` | `4.3.0` | Fluent assertion library |
+
 ---
 
 ## 🚦 CI / CD
@@ -359,6 +476,7 @@ Each package has its own independent pipeline so versions can be released separa
 |---|---|---|
 | `cicd-logging.yml` | [`.github/workflows/cicd-logging.yml`](.github/workflows/cicd-logging.yml) | `Jewelix.Logging` |
 | `cicd-openapi.yml` | [`.github/workflows/cicd-openapi.yml`](.github/workflows/cicd-openapi.yml) | `Jewelix.OpenApi` |
+| `cicd-healthchecks.yml` | [`.github/workflows/cicd-healthchecks.yml`](.github/workflows/cicd-healthchecks.yml) | `Jewelix.HealthChecks` |
 
 ### Pipeline overview
 
@@ -374,6 +492,8 @@ push / PR ──► ci  (Build & Test)
 | **Pack & Publish** | `cicd-logging.yml` | Push of `v*.*.*` tag | restore → build → pack `Jewelix.Logging` → push `.nupkg` + `.snupkg` |
 | **Build & Test** | `cicd-openapi.yml` | Push to `main`; every PR | restore → build → test → upload TRX → annotate PR |
 | **Pack & Publish** | `cicd-openapi.yml` | Push of `v*.*.*` tag | restore → build → pack `Jewelix.OpenApi` → push `.nupkg` + `.snupkg` |
+| **Build & Test** | `cicd-healthchecks.yml` | Push to `main`; every PR | restore → build → test → upload TRX → annotate PR |
+| **Pack & Publish** | `cicd-healthchecks.yml` | Push of `v*.*.*` tag | restore → build → pack `Jewelix.HealthChecks` → push `.nupkg` + `.snupkg` |
 
 ### Required permissions
 
@@ -428,7 +548,8 @@ Library.Jewelix.Infrastructure/
 ├── .github/
 │   └── workflows/
 │       ├── cicd-logging.yml                # CI/CD for Jewelix.Logging (independent release)
-│       └── cicd-openapi.yml                # CI/CD for Jewelix.OpenApi (independent release)
+│       ├── cicd-openapi.yml                # CI/CD for Jewelix.OpenApi (independent release)
+│       └── cicd-healthchecks.yml           # CI/CD for Jewelix.HealthChecks (independent release)
 │
 ├── src/
 │   ├── Jewelix.Logging/                    # 📦 Package: Jewelix.Logging v1.0.0
@@ -440,15 +561,24 @@ Library.Jewelix.Infrastructure/
 │   │   ├── LoggerMiddleware.cs             # HTTP middleware + body capture + Sanitize
 │   │   └── SerilogLogger.cs               # ILogger<T> → Serilog adapter
 │   │
-│   └── Jewelix.OpenApi/                    # 📦 Package: Jewelix.OpenApi v1.0.0
-│       ├── Jewelix.OpenApi.csproj          # SDK project — imports Package.props
-│       ├── Jewelix.OpenApi.Package.props   # NuGet identity, version & packaging metadata
+│   ├── Jewelix.OpenApi/                    # 📦 Package: Jewelix.OpenApi v1.0.0
+│   │   ├── Jewelix.OpenApi.csproj          # SDK project — imports Package.props
+│   │   ├── Jewelix.OpenApi.Package.props   # NuGet identity, version & packaging metadata
+│   │   ├── Jewelix-logo.png                # Package display icon (PNG 64×64, ≤1 MB)
+│   │   ├── GlobalUsings.cs                 # Global implicit usings
+│   │   ├── JewelixOpenApiDocument.cs       # Per-document config (Name, Title, Version, etc.)
+│   │   ├── JewelixOpenApiOptions.cs        # Root options — Documents collection + SectionName
+│   │   ├── BearerSecuritySchemeTransformer.cs  # Internal IOpenApiDocumentTransformer
+│   │   └── OpenApiExtensions.cs            # AddJewelixOpenApi / UseJewelixOpenApi
+│   │
+│   └── Jewelix.HealthChecks/               # 📦 Package: Jewelix.HealthChecks v1.0.0
+│       ├── Jewelix.HealthChecks.csproj     # SDK project — imports Package.props
+│       ├── Jewelix.HealthChecks.Package.props  # NuGet identity, version & packaging metadata
 │       ├── Jewelix-logo.png                # Package display icon (PNG 64×64, ≤1 MB)
 │       ├── GlobalUsings.cs                 # Global implicit usings
-│       ├── JewelixOpenApiDocument.cs       # Per-document config (Name, Title, Version, etc.)
-│       ├── JewelixOpenApiOptions.cs        # Root options — Documents collection + SectionName
-│       ├── BearerSecuritySchemeTransformer.cs  # Internal IOpenApiDocumentTransformer
-│       └── OpenApiExtensions.cs            # AddJewelixOpenApi / UseJewelixOpenApi
+│       ├── JewelixHealthCheckOptions.cs    # Root options — paths, policy, SQL, external APIs
+│       ├── JewelixExternalApiCheck.cs      # Per-API config (Name, Uri, Tag)
+│       └── HealthCheckExtensions.cs        # AddJewelixHealthChecks / UseJewelixHealthChecks
 │
 ├── test/
 │   ├── Jewelix.Logging.Tests/              # 🧪 31 tests — xUnit + Shouldly + TestHost
@@ -461,12 +591,18 @@ Library.Jewelix.Infrastructure/
 │   │   ├── SerilogLoggerTests.cs          # SerilogLogger<T>: level mapping, scope, context
 │   │   └── UseJewelixLoggerTests.cs       # UseJewelixLogger: pipeline + null guards
 │   │
-│   └── Jewelix.OpenApi.Tests/              # 🧪 29 tests — xUnit + Shouldly + TestHost
-│       ├── BearerSecuritySchemeTransformerTests.cs  # Transformer: Bearer scheme injection
-│       ├── DependencyInjectionTests.cs     # AddJewelixOpenApi DI registration
-│       ├── JewelixOpenApiOptionsTests.cs   # Options defaults and SectionName
-│       ├── OpenApiExtensionsTests.cs       # UseJewelixOpenApi guards + config override
-│       └── UseJewelixOpenApiTests.cs       # Full pipeline via WebApplication + TestServer
+│   ├── Jewelix.OpenApi.Tests/              # 🧪 29 tests — xUnit + Shouldly + TestHost
+│   │   ├── BearerSecuritySchemeTransformerTests.cs  # Transformer: Bearer scheme injection
+│   │   ├── DependencyInjectionTests.cs     # AddJewelixOpenApi DI registration
+│   │   ├── JewelixOpenApiOptionsTests.cs   # Options defaults and SectionName
+│   │   ├── OpenApiExtensionsTests.cs       # UseJewelixOpenApi guards + config override
+│   │   └── UseJewelixOpenApiTests.cs       # Full pipeline via WebApplication + TestServer
+│   │
+│   └── Jewelix.HealthChecks.Tests/         # 🧪 25 tests — xUnit + Shouldly + TestHost
+│       ├── GlobalUsings.cs                 # Global implicit usings
+│       ├── JewelixHealthCheckOptionsTests.cs  # Constants + ConnectionString/Services defaults
+│       ├── DependencyInjectionTests.cs     # AddJewelixHealthChecks DI + IConfiguration binding
+│       └── UseJewelixHealthChecksTests.cs  # Full pipeline via WebApplication + TestHost
 │
 ├── .editorconfig                           # C# code style rules
 ├── .gitignore
@@ -491,7 +627,7 @@ dotnet test --verbosity normal
 dotnet test --filter "FullyQualifiedName~LoggerMiddlewareTests"
 ```
 
-The test suite runs **60 tests** across two test projects.
+The test suite runs **85 tests** across three test projects.
 
 ### `Jewelix.Logging.Tests` — 31 tests
 
@@ -514,5 +650,13 @@ The `SerilogTestCollection` collection fixture forces **sequential** execution w
 | `DependencyInjectionTests` | `AddJewelixOpenApi` — null guard, singleton registration, multi-document, chaining |
 | `OpenApiExtensionsTests` | `UseJewelixOpenApi` null guard, non-`IEndpointRouteBuilder` guard, config override, `EnableBearerAuth` exclusion |
 | `UseJewelixOpenApiTests` | Full pipeline via `WebApplication` + `TestHost` — JSON endpoints, Scalar UI, Bearer auth in spec |
+
+### `Jewelix.HealthChecks.Tests` — 25 tests
+
+| Test class | Coverage area |
+|---|---|
+| `JewelixHealthCheckOptionsTests` | Constant values for all path/policy/name constants; `ConnectionString` and `Services` defaults; `JewelixServiceCheck` defaults |
+| `DependencyInjectionTests` | `AddJewelixHealthChecks` — null guard, options singleton, configure delegate, `IConfiguration` root-key binding, config-wins-over-delegate merge, empty-config preserves delegate list |
+| `UseJewelixHealthChecksTests` | Null/non-route-builder guards; liveness, readiness, UI-feed endpoints via constant paths; JSON response body |
 
 ---

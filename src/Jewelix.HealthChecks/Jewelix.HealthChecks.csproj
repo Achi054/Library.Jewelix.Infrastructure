@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- All NuGet identity, versioning, and packaging metadata lives in Jewelix.HealthChecks.Package.props. -->
+  <Import Project="Jewelix.HealthChecks.Package.props" />
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Jewelix.HealthChecks</RootNamespace>
+    <AssemblyName>Jewelix.HealthChecks</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <!-- CA2227/CA1002: Options classes used with IConfiguration.Bind require
+         a public List<T> setter — these analyzer rules are not appropriate here.
+         NU1902: transitive KubernetesClient vulnerability advisory; suppressed
+         as the vulnerable code path is not exercised by this package. -->
+    <NoWarn>$(NoWarn);CA2227;CA1002;NU1902</NoWarn>
+  </PropertyGroup>
+
+  <!-- Use the shared ASP.NET Core framework reference. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI" Version="9.0.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>
