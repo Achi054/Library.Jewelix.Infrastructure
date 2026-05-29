@@ -13,9 +13,11 @@
   <Folder Name="/src/">
     <Project Path="src/Jewelix.Logging/Jewelix.Logging.csproj" />
     <Project Path="src/Jewelix.OpenApi/Jewelix.OpenApi.csproj" />
+    <Project Path="src/Jewelix.HealthChecks/Jewelix.HealthChecks.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Jewelix.Logging.Tests/Jewelix.Logging.Tests.csproj" />
     <Project Path="test/Jewelix.OpenApi.Tests/Jewelix.OpenApi.Tests.csproj" />
+    <Project Path="test/Jewelix.HealthChecks.Tests/Jewelix.HealthChecks.Tests.csproj" />
   </Folder>
 </Solution>
