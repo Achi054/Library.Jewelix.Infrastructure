@@ -12,8 +12,9 @@ public class BearerSecuritySchemeTransformerTests
 
         await transformer.TransformAsync(document, null!, CancellationToken.None);
 
-        document.Components.ShouldNotBeNull();
-        document.Components.SecuritySchemes.ShouldContainKey("Bearer");
+        // Capture the non-null result so the compiler knows Components is non-null below.
+        var components = document.Components.ShouldNotBeNull();
+        components.SecuritySchemes.ShouldContainKey("Bearer");
     }
 
     [Fact]
@@ -24,7 +25,8 @@ public class BearerSecuritySchemeTransformerTests
 
         await transformer.TransformAsync(document, null!, CancellationToken.None);
 
-        document.Components.SecuritySchemes["Bearer"].Type.ShouldBe(SecuritySchemeType.Http);
+        var scheme = document.Components.ShouldNotBeNull().SecuritySchemes["Bearer"];
+        scheme.Type.ShouldBe(SecuritySchemeType.Http);
     }
 
     [Fact]
@@ -35,7 +37,7 @@ public class BearerSecuritySchemeTransformerTests
 
         await transformer.TransformAsync(document, null!, CancellationToken.None);
 
-        var scheme = document.Components.SecuritySchemes["Bearer"];
+        var scheme = document.Components.ShouldNotBeNull().SecuritySchemes["Bearer"];
         scheme.Scheme.ShouldBe("bearer");
         scheme.BearerFormat.ShouldBe("JWT");
     }
@@ -49,7 +51,7 @@ public class BearerSecuritySchemeTransformerTests
         await transformer.TransformAsync(document, null!, CancellationToken.None);
         await transformer.TransformAsync(document, null!, CancellationToken.None);
 
-        document.Components.SecuritySchemes.Count.ShouldBe(1);
+        document.Components.ShouldNotBeNull().SecuritySchemes.ShouldNotBeNull().Count.ShouldBe(1);
     }
 
     [Fact]
@@ -70,8 +72,9 @@ public class BearerSecuritySchemeTransformerTests
 
         await transformer.TransformAsync(document, null!, CancellationToken.None);
 
-        document.Components.SecuritySchemes.Count.ShouldBe(2);
-        document.Components.SecuritySchemes.ShouldContainKey("ApiKey");
-        document.Components.SecuritySchemes.ShouldContainKey("Bearer");
+        var schemes = document.Components.ShouldNotBeNull().SecuritySchemes.ShouldNotBeNull();
+        schemes.Count.ShouldBe(2);
+        schemes.ShouldContainKey("ApiKey");
+        schemes.ShouldContainKey("Bearer");
     }
 }
