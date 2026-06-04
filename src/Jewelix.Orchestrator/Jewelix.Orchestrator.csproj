@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- All NuGet identity, versioning, and packaging metadata lives in Jewelix.Orchestrator.Package.props. -->
+  <Import Project="Jewelix.Orchestrator.Package.props" />
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Jewelix.Orchestrator</RootNamespace>
+    <AssemblyName>Jewelix.Orchestrator</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <!--
+      CA1040 — marker interfaces (ICommand, IQuery, IEvent) are intentional design.
+      CA1711 — IEventHandler intentionally ends in 'EventHandler'; renaming would break usability.
+      CA1724 — Orchestrator class name intentionally matches the Jewelix.Orchestrator namespace
+               (same pattern as Microsoft.Extensions.Logging.Logger in its own namespace).
+    -->
+    <NoWarn>$(NoWarn);CA1040;CA1711;CA1724</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>
